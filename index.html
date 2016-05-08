@@ -19,8 +19,28 @@
     <link rel="stylesheet" href="css/theme/solarized.css" id="theme">
 
     <!-- Code syntax highlighting -->
-    <link rel="stylesheet" href="lib/css/zenburn.css">
+    <!--<link rel="stylesheet" href="lib/css/tomorrow-night-bright.css">-->
+    <link rel="stylesheet" href="lib/css/idea.css">
+    <!--<link rel="stylesheet" href="node_modules/highlight.js/styles/zenburn.css">-->
+    <style>
+        .reveal .slides section .fragment.current-only {
+            opacity: 1;
+            visibility: visible;
+            display: none;
+        }
 
+        .reveal .slides section .fragment.current-only.current-fragment {
+            display: block;
+        }
+
+        .line {
+            display: block;
+        }
+
+        .line.focus {
+            background: yellow;
+        }
+    </style>
     <!-- Printing and PDF exports -->
     <script>
         var link = document.createElement('link');
@@ -49,6 +69,10 @@
                 <li>
                     https://www.elastic.co/elasticon/conf/2016/sf/stories-from-elastic-support-top-problems-and-solutions
                 </li>
+                <li>
+                    Think about Round robin all requests when connecting with a non java client, check comment in this url:
+                    https://www.elastic.co/guide/en/elasticsearch/guide/2.x/indexing-performance.html#_other
+                </li>
             </ul>
         </section>
         <section>
@@ -62,6 +86,25 @@
         </section>
 
         <section>
+            <h2>Coming to Elasticsearch</h2>
+            <section>
+                <div>
+                    <div style="float: left; width: 40%;"><img style="background-color: white"
+                                                               src="/lib/images/elastic-logo.png"></div>
+                    <div>
+                        <p></p>
+                        <p class="fragment">Providing search to your users</p>
+                        <p class="fragment">Log monitoring</p>
+                        <p class="fragment">Cool Kibana dashboards</p>
+                    </div>
+                </div>
+            </section>
+            <section>
+                <img src="/lib/images/comingto/cool-kibana-dashboard.png">
+            </section>
+        </section>
+
+        <section>
             <h2>Beginning with Elasticsearch</h2>
             <section data-background="/lib/images/elastic-cluster-full-color.jpg">
             </section>
@@ -72,13 +115,11 @@
                 <img src="/lib/images/firststeps/starting-elasticsearch.png">
             </section>
             <section>
-            <pre><code class="hljs" data-trim contenteditable>
+                <pre><code>
 curl 'localhost:9200?pretty'
-			</code></pre>
-                <p>
-                    Response
-                </p>
-<pre><code class="hljs" data-trim contenteditable>{
+                </code></pre>
+<pre><code>
+{
   "name" : "Tatterdemalion",
   "cluster_name" : "elasticsearch",
   "version" : {
@@ -89,20 +130,25 @@ curl 'localhost:9200?pretty'
     "lucene_version" : "5.5.0"
   },
   "tagline" : "You Know, for Search"
-}</code></pre>
+}
+
+</code></pre>
+                <p class="fragment" data-code-focus="2"/>
+                <p class="fragment" data-code-focus="4-15"/>
+                <p class="fragment" data-code-focus="5"/>
+                <p class="fragment" data-code-focus="6"/>
+                <p class="fragment" data-code-focus="8"/>
             </section>
             <section>
-            <pre><code class="hljs" data-trim contenteditable>
+            <pre><code>
 curl -XPOST 'localhost:9200/conferences/conference/1?pretty' -d '
 {
   "name": "Codemotion Amsterdam",
   "location": "Kromhouthal"
 }'
 			</code></pre>
-                <p>
-                    Response
-                </p>
-                <pre><code class="hljs" data-trim contenteditable>{
+                <pre><code>
+{
   "_index" : "conferences",
   "_type" : "conference",
   "_id" : "1",
@@ -113,7 +159,13 @@ curl -XPOST 'localhost:9200/conferences/conference/1?pretty' -d '
     "failed" : 0
   },
   "created" : true
-}</code></pre>
+}
+                </code></pre>
+                <p class="fragment" data-code-focus="2-6"/>
+                <p class="fragment" data-code-focus="2"/>
+                <p class="fragment" data-code-focus="3-6"/>
+                <p class="fragment" data-code-focus="8-20"/>
+                <p class="fragment" data-code-focus="18"/>
             </section>
             <aside class="notes">
                 First show how easy it is to start you node / cluster, insert documents and query them.
@@ -124,68 +176,20 @@ curl -XPOST 'localhost:9200/conferences/conference/1?pretty' -d '
         <section>
             <h2>Wow, what just happened?</h2>
             <section>
-                <p class="fragment">Started a cluster and a node</p>
+                <p class="fragment">Started a cluster of one node</p>
                 <p class="fragment">We created an index</p>
-                <p class="fragment">The index was created with a number of shards and replicas</p>
-                <p class="fragment">The mapping was created for the fields we provided</p>
-            </section>
-            <section>
-                <p>All using the defaults</p>
-            </section>
-            <section>
-                <table>
-                    <thead>
-                    <tr>
-                        <th></th>
-                        <th>default value</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td>cluster name</td>
-                        <td>elasticsearch</td>
-                    </tr>
-                    <tr class="fragment">
-                        <td>node name</td>
-                        <td>random marvel character</td>
-                    </tr>
-                    <tr class="fragment">
-                        <td>num shards</td>
-                        <td>5</td>
-                    </tr>
-                    <tr class="fragment">
-                        <td>num replicas</td>
-                        <td>1</td>
-                    </tr>
-                    <tr class="fragment">
-                        <td>mappings</td>
-                        <td>2 string fields</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </section>
-            <section>
-                <p>That is a lot of defaults, but ...</p>
+                <p class="fragment">Inserted a document</p>
             </section>
             <aside class="notes">
                 Explain what just happens, created an index, used a certain number of shards, replicas, created a
-                mapping
+                mapping. But there are a lot of choices to be made. This way only the defaults are used. These are often
+                not what you want.
             </aside>
         </section>
 
         <section>
-            <h2>More questions than answers</h2>
-            <ul>
-                <li class="fragment">How many nodes?</li>
-                <li class="fragment">How many shards?</li>
-                <li class="fragment">How many replicas?</li>
-                <li class="fragment">Provide a mapping?</li>
-                <li class="fragment">Time based indices?</li>
-                <li class="fragment">Can I change mappings?</li>
-                <li class="fragment">Should I monitor my cluster?</li>
-                <li class="fragment">What if queries are slow?</li>
-                <li class="fragment">What if indexing takes to much time?</li>
-            </ul>
+            <h2>Raises a lot of questions</h2>
+            <img src="/lib/images/comingto/more-questions.png">
             <aside class="notes">
                 But using defaults is not the right way for most of these questions?
             </aside>
@@ -194,55 +198,132 @@ curl -XPOST 'localhost:9200/conferences/conference/1?pretty' -d '
         <section>
             <h2>Design your cluster</h2>
             <section>
-                <p>How many nodes do I need?</p>
-                <p>Think about split brain, minimum master nodes (n/2 + 1)</p>
-                <p>Master is responsible for health of the cluster</p>
-                <p>Create images with different setups</p>
+                <h3>Installation</h3>
+                <p>Just download, unzip and run</p>
+                <p>Use ansible scripts made available</p>
+                <p>Use package manager: yum, apt</p>
             </section>
             <section>
-                <p>Some reference numbers coming from elastic support</p>
-                <p>Referentie naar presentatie geven</p>
-                <p>Use max of 50% of your machine RAM for elastic</p>
-                <p>Do not appoint more than 30500Mb RAM</p>
+                <h3>Configuration</h3>
+                <p>/etc/defaults/elasticsearch</p>
+                <p>/etc/elasticsearch/elasticsearch.yml</p>
+                <aside class="notes">
+                    Important to explain that elasticsearch.yml is used to configure the node and the other file is
+                    meant to configure the process and pass some environment variables.
+                </aside>
+            </section>
+            <section>
+                <h3>/etc/defaults/elasticsearch</h3>
+                <pre><code>
+# Heap size defaults to 256m min, 1g max
+# Set ES_HEAP_SIZE to 50% of available RAM, but no more than 31g
+ES_HEAP_SIZE=2g
+                </code></pre>
+                <p class="fragment" data-code-focus="2-3"/>
+                <p class="fragment" data-code-focus="4"/>
+            </section>
+            <section>
+                <h3>/etc/elasticsearch/elasticsearch.yml</h3>
+                <pre><code class="hljs">
+cluster.name: playground
+node.name: node-1
+discovery.zen.ping.unicast.hosts: ["node-1", "node-2", "node-3"]
+discovery.zen.minimum_master_nodes: 2
+path.repo: /opt/es_snapshots/
+script.inline: true
+http.cors.enabled: true
+                </code></pre>
+                <p class="fragment" data-code-focus="2-3"/>
+                <p class="fragment" data-code-focus="4-5"/>
+                <p class="fragment" data-code-focus="6-8"/>
+                <aside class="notes">
+                    There is a lot to tell about scripting, there are so many fine grained options to configure what
+                    you allow to do with scripts.
+                    https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-scripting.html
+                </aside>
+            </section>
+
+            <section>
+                <p>How many nodes do I need?</p>
+            </section>
+            <section>
+                <div style="float: left">
+                    <img src="lib/images/cluster/1-node.png">
+                </div>
+                <div>
+                    <p>Development / non-critical</p>
+                </div>
+            </section>
+            <section>
+                <div style="float: left">
+                    <img src="lib/images/cluster/3-node.png">
+                </div>
+                <div>
+                    <p>Small production</p>
+                </div>
+                <aside class="notes">
+                    Think about split brain, minimum master nodes (n/2 + 1), Master is responsible for health of the
+                    cluster
+                </aside>
+            </section>
+            <section>
+                <div style="float: left">
+                    <img src="lib/images/cluster/n-node.png" width="80%">
+                </div>
+                <div>
+                    <p>Large production</p>
+                </div>
+                <aside class="notes">
+                    https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-node.html
+                </aside>
             </section>
 
             <aside class="notes">
-                Talk about the number of nodes, the type of nodes, and a bit of connecting using clients. As a side step
-                we could talk about security here, but I am not sure yet.
+                Talk about the number of nodes, the type of nodes, and a bit of connecting using clients.
             </aside>
         </section>
 
         <section>
             <h2>Design your indices</h2>
             <section>
-                <p>Create an image explaining what happens when you do a query (Index, shard, Lucene)</p>
+                <img src="/lib/images/indices/overview.png">
+            </section>
+            <section>
+                <img src="/lib/images/indices/playground.png">
+            </section>
+            <section>
+                <img src="/lib/images/indices/playground-query.png">
+            </section>
+            <section>
+                <img src="/lib/images/indices/logs.png">
+            </section>
+            <section>
+                <img src="/lib/images/indices/logs-query.png">
+            </section>
+            <section>
+                <p>MAYBE SHOW A REQUEST TO CREATE AN INDEX</p>
             </section>
             <section>
                 <p>Specify the amount of shards</p>
-            </section>
-            <section>
                 <ul>
-                    <li>Amount of docs or terms</li>
-                    <li>Indexing speeds</li>
-                    <li>Start small and test</li>
-                    <li>Why not a lot of shards?</li>
+                    <li class="fragment">Amount of docs or terms</li>
+                    <li class="fragment">Indexing speeds</li>
+                    <li class="fragment">Start small and test</li>
+                    <li class="fragment">Why not a lot of shards?</li>
+                    <li class="fragment">Not bigger than than 50Gb</li>
                 </ul>
             </section>
-            <section>
-                <p>Some reference numbers coming from elastic support</p>
-                <p>Referentie naar presentatie geven</p>
-                <p>Try not to make bigger shards than 50Gb</p>
-            </section>
-            <section>
-                <p>Do you have time based indices?</p>
-            </section>
-            <section>
-                <p>Maybe mention the _all field, can be expensive, especially if you do not need it.</p>
-            </section>
+            <!--<section>-->
+                <!--<p>Maybe mention the _all field, can be expensive, especially if you do not need it.</p>-->
+            <!--</section>-->
             <section>
                 <p>Should I use types?</p>
             </section>
+            <section>
+                <p>Have time based indices, use Index Templates?</p>
+            </section>
             <aside class="notes">
+                So you have your cluster running, it has enough nodes and each node is configured with enough memory.
                 A very important thing to consider is whether you are using time based indices. Than think about
                 the amount of shards that you would need and of course the amount of replicas.
             </aside>
@@ -251,10 +332,7 @@ curl -XPOST 'localhost:9200/conferences/conference/1?pretty' -d '
         <section>
             <h2>Design your mapping</h2>
             <section>
-                <p>Maybe the hardest thing to do in the beginning.</p>
-            </section>
-            <section>
-                <p>Why?</p>
+                <p>Should I create my own mapping?</p>
             </section>
             <section>
                 <p>A mapping is persistent, can only add new things.</p>
@@ -268,62 +346,57 @@ PUT /conferences
     "conference": {
       "properties": {
         "name": {
-          "type": "string"
-        }
-      }
-    }
-  }
-}
-                </code></pre>
-            </section>
-            <section>
-                <p>Retrieve the created mapping for the index</p>
-                <pre><code class="hljs" data-trim contenteditable>
-GET /conferences/_mapping
-
-{
-  "conferences": {
-    "mappings": {
-      "conference": {
-        "properties": {
-          "name": {
-            "type": "string"
+          "type": "string",
+          "analyzer": "standard",
+          "fields": {
+            "raw": {
+              "type": "string",
+              "index": "not_analyzed"
+            }
           }
         }
-      }
-    }
-  }
-}
+}}}}
                 </code></pre>
+                <p class="fragment" data-code-focus="6"/>
+                <p class="fragment" data-code-focus="7-8"/>
+                <p class="fragment" data-code-focus="9-14"/>
+                <p class="fragment" data-code-focus="12"/>
             </section>
             <section>
-                <p>The field is analyzed with the (default) standard analyzer</p>
+                <img src="/lib/images/indices/analyzer-base.png">
             </section>
             <section>
-                <p>What is an analyzer?</p>
-                <p>Hier wil ik een plaatje hebben die laat zien wat een analyzer doet</p>
+                <img src="/lib/images/indices/analyzer-start.png">
             </section>
             <section>
-                <p>Most used analyzers (But there are a lot more)</p>
-                <p>Tabel met analyzers</p>
+                <img src="/lib/images/indices/analyzer-charfilter.png">
             </section>
             <section>
-                <p>We can analyze the same field multiple times</p>
-                <p>Moeten hier even een code voorbeeld geven</p>
+                <img src="/lib/images/indices/analyzer-tonizer.png">
             </section>
             <section>
-                <p>Not analyzed fields, can work with doc_values.</p>
-                <p>Big advantage for sorting and aggregations</p>
+                <img src="/lib/images/indices/analyzer-tokenfilter.png">
             </section>
             <section>
-                <p>Doc_values ?????</p>
+                <img src="/lib/images/indices/analyzer-analyzer.png">
             </section>
             <section>
-                <p>From 2.3 use the keyword fields?????</p>
+                <ul>
+                    <li class="fragment">Choose the right analyzer for the job</li>
+                    <li class="fragment">Do not analyze if you don't need it</li>
+                </ul>
+                <p><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-analyzers.html">
+                    https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-analyzers.html
+                </a></p>
             </section>
-            <section>
-                <p>Structuring you model: objects - nested - parent/child</p>
-            </section>
+            <!--<section>-->
+                <!--<p>Structuring you model:</p>-->
+                <!--<ul>-->
+                    <!--<li>objects</li>-->
+                    <!--<li>nested</li>-->
+                    <!--<li>parent-child</li>-->
+                <!--</ul>-->
+            <!--</section>-->
         </section>
 
         <section>
@@ -332,16 +405,40 @@ GET /conferences/_mapping
                 <p><a href="https://www.elastic.co/products/beats">Beats</a></p>
                 <p><a href="https://www.elastic.co/products/logstash">Logstash</a></p>
                 <p><a href="https://github.com/jprante/elasticsearch-jdbc">jdbc-importer</a></p>
-                <p>Roll you own</p>
+                <p>Create your own</p>
             </section>
             <section>
-                <p>Use Bulk</p>
-                <p>Experiment with Bulk size</p>
-                <p>Handle the bulk response</p>
-                <p>Think about refresh</p>
-                <p>Misschien een plaatje met wat het betekend</p>
-                <p>Think about the replicas</p>
+                <img src="/lib/images/indexing/base.png">
             </section>
+            <section>
+                <img src="/lib/images/indexing/index-doc.png">
+            </section>
+            <section>
+                <img src="/lib/images/indexing/index-doc-2.png">
+            </section>
+            <section>
+                <img src="/lib/images/indexing/refresh.png">
+            </section>
+            <section>
+                <img src="/lib/images/indexing/more-docs.png">
+            </section>
+            <section>
+                <img src="/lib/images/indexing/flush.png">
+            </section>
+            <section>
+                <h3>Tips</h3>
+                <ul>
+                    <li class="fragment">Use Bulk</li>
+                    <li class="fragment">Disable or decrease refresh rate</li>
+                    <li class="fragment">Index without replicas</li>
+                </ul>
+            </section>
+            <aside class="notes">
+                <p>Chose the correct bulk size, usually each bulk should be between 5-15Mb</p>
+                <p>Round-robin your bulk requests over the nodes, or one node could get flouded based on the memory
+                    requirements of a bulk</p>
+                https://www.elastic.co/guide/en/elasticsearch/guide/2.x/indexing-performance.html
+            </aside>
         </section>
 
         <section>
@@ -413,10 +510,19 @@ GET /conferences/_mapping
                 return !!document.querySelector('[data-markdown]');
             }
             },
+//            {
+//                src: 'plugin/highlight/highlight.js', async: true, callback: function () {
+//                hljs.initHighlightingOnLoad();
+//            }
+//            },
+            {src: 'lib/js/vendor/highlight.pack.js'},
             {
-                src: 'plugin/highlight/highlight.js', async: true, callback: function () {
-                hljs.initHighlightingOnLoad();
-            }
+                src: 'node_modules/reveal-code-focus/reveal-code-focus.js',
+                async: true,
+                callback: function () {
+                    RevealCodeFocus();
+                    hljs.registerLanguage('javascript');
+                }
             },
             {src: 'plugin/zoom-js/zoom.js', async: true},
             {src: 'plugin/notes/notes.js', async: true}
