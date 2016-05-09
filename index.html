@@ -61,20 +61,21 @@
 
     <!-- Any section element inside of this container is displayed as a slide -->
     <div class="slides">
-        <section>
-            <h1>TODO</h1>
-            <ul>
-                <li>https://demoneaux.github.io/reveal-code-focus/#/</li>
-                <li>https://www.elastic.co/elasticon/conf/2016/sf/elasticsearch-and-resiliency</li>
-                <li>
-                    https://www.elastic.co/elasticon/conf/2016/sf/stories-from-elastic-support-top-problems-and-solutions
-                </li>
-                <li>
-                    Think about Round robin all requests when connecting with a non java client, check comment in this url:
-                    https://www.elastic.co/guide/en/elasticsearch/guide/2.x/indexing-performance.html#_other
-                </li>
-            </ul>
-        </section>
+        <!--<section>-->
+            <!--<h1>TODO</h1>-->
+            <!--<ul>-->
+                <!--<li>https://demoneaux.github.io/reveal-code-focus/#/</li>-->
+                <!--<li>https://www.elastic.co/elasticon/conf/2016/sf/elasticsearch-and-resiliency</li>-->
+                <!--<li>-->
+                    <!--https://www.elastic.co/elasticon/conf/2016/sf/stories-from-elastic-support-top-problems-and-solutions-->
+                <!--</li>-->
+                <!--<li>-->
+                    <!--Think about Round robin all requests when connecting with a non java client, check comment in this-->
+                    <!--url:-->
+                    <!--https://www.elastic.co/guide/en/elasticsearch/guide/2.x/indexing-performance.html#_other-->
+                <!--</li>-->
+            <!--</ul>-->
+        <!--</section>-->
         <section>
             <h1>Making your elastic cluster perform</h1>
             <p>
@@ -278,6 +279,14 @@ http.cors.enabled: true
                 </aside>
             </section>
 
+            <section>
+                <h3>Hardware</h3>
+                <ul>
+                    <li>Prefer cores over clock speed</li>
+                    <li>Choose between 8-64Gb</li>
+                    <li>Prefer SSD</li>
+                </ul>
+            </section>
             <aside class="notes">
                 Talk about the number of nodes, the type of nodes, and a bit of connecting using clients.
             </aside>
@@ -314,7 +323,7 @@ http.cors.enabled: true
                 </ul>
             </section>
             <!--<section>-->
-                <!--<p>Maybe mention the _all field, can be expensive, especially if you do not need it.</p>-->
+            <!--<p>Maybe mention the _all field, can be expensive, especially if you do not need it.</p>-->
             <!--</section>-->
             <section>
                 <p>Should I use types?</p>
@@ -389,14 +398,6 @@ PUT /conferences
                     https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-analyzers.html
                 </a></p>
             </section>
-            <!--<section>-->
-                <!--<p>Structuring you model:</p>-->
-                <!--<ul>-->
-                    <!--<li>objects</li>-->
-                    <!--<li>nested</li>-->
-                    <!--<li>parent-child</li>-->
-                <!--</ul>-->
-            <!--</section>-->
         </section>
 
         <section>
@@ -444,34 +445,246 @@ PUT /conferences
         <section>
             <h2>Querying documents</h2>
             <section>
-                <p>There are a lot of different quesries available.</p>
-                <p>Know the queries that are cache-able queries</p>
-                <p>Filter as much as possible on non_analyzed fields</p>
-                <p>Make combinations of queries</p>
+                <pre><code class="hljs" data-trim contenteditable>
+curl -XGET 'http://localhost:9200/_search'
+                </code></pre>
             </section>
             <section>
-                <p>Sometimes two consecutive queries are better than one big one. </p>
+                <pre><code data-trim>
+curl -XGET 'http://localhost:9200/meetups/_search?
+              q=venue.city:amsterdam%20AND%20description:elasticsearch
+              &pretty'
+                </code></pre>
             </section>
             <section>
-                <p>Use the profile api to learn about the performance of your query</p>
-                <p>Use the explain api to learn about the scoring</p>
+                <pre><code data-trim>
+curl -XGET "http://localhost:9200/meetups/_search" -d'
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "venue.city": "amsterdam"
+          }
+        },
+        {
+          "match": {
+            "description": "elasticsearch"
+          }
+        }
+      ]
+}}}'
+                </code></pre>
+            </section>
+            <section>
+                <pre><code data-trim>
+curl -XGET "http://localhost:9200/meetups/_search" -d'
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "description": "elasticsearch"
+          }
+        }
+      ],
+      "filter": {
+        "term": {
+          "venue.city.raw": "Amsterdam"
+        }
+      }
+    }}}'
+                </code></pre>
+                <aside class="notes">
+                    Talk about the difference between query and filter context. A query calculates a score, a filter
+                    does not need a score. It is a yes/no answer. Also mention using the not_analyzed fields.
+                </aside>
+            </section>
+
+            <section>
+                <h3>Some query types available</h3>
+                <ul>
+                    <li>Full text - Match, Query String, Common Terms</li>
+                    <li>Term level - Term, Range, Exist, Missing</li>
+                    <li>Compound - Bool, Function score</li>
+                    <li>Geo - GeoShape, Geo Bounding Box, Geo Distance</li>
+                </ul>
+            </section>
+            <section>
+                <p>Profile api to learn about the performance</p>
+                <p>Explain api to learn about the scoring</p>
+            </section>
+            <section>
+                <pre><code data-trim>
+curl -XGET "http://localhost:9200/meetups/_search" -d'
+{
+  "query": {
+    "function_score": {
+      "query": {"match": {"_all": "elastic elasticsearch"}
+      },
+      "functions": [
+        {
+          "gauss": {
+            "venue.location": {
+              "origin": {
+                "lat": 52.0607,
+                "lon": 4.494
+              },
+              "scale": "2km"
+            }
+          }
+        }
+      ]
+    }
+  }
+}'
+                </code></pre>
+            </section>
+        </section>
+
+        <section>
+            <h2>Aggregations</h2>
+            <section>
+                <p>Maybe the reason why elasticsearch became so popular</p>
+            </section>
+            <section>
+                <pre><code data-trim>
+curl -XGET "http://localhost:9200/meetups/_search" -d'
+{
+  "size": 0,
+  "aggs": {
+    "byCity": {
+      "terms": {
+        "field": "venue.city.raw",
+        "size": 10
+      }
+    }
+  }
+}'
+                </code></pre>
+            </section>
+            <section>
+                <p>Inverted index not suitable for aggregations</p>
+            </section>
+            <section>
+                <h3>doc_values</h3>
+                <p>Stored on disk</p>
+                <p>All fields except analyzed strings</p>
+                <p>Make use of columnar storage</p>
+            </section>
+            <section>
+                <h3>fielddata</h3>
+                <p>For analyzed strings</p>
+                <p>Stored in the heap</p>
             </section>
         </section>
 
         <section>
             <h2>Monitoring the cluster</h2>
             <section>
-                <p>The manual way, using the _cat api</p>
+                <pre><code data-trim>GET /_cluster/health</code></pre>
+                <pre><code data-trim>
+{
+  "cluster_name": "playground",
+  "status": "yellow",
+  "timed_out": false,
+  "number_of_nodes": 1,
+  "number_of_data_nodes": 1,
+  "active_primary_shards": 55,
+  "active_shards": 55,
+  "relocating_shards": 0,
+  "initializing_shards": 0,
+  "unassigned_shards": 16,
+  "delayed_unassigned_shards": 0,
+  "number_of_pending_tasks": 0,
+  "number_of_in_flight_fetch": 0,
+  "task_max_waiting_in_queue_millis": 0,
+  "active_shards_percent_as_number": 77.46478873239437
+}
+                </code></pre>
+                <p class="fragment" data-code-focus="3"/>
+                <p class="fragment" data-code-focus="11"/>
+            </section>
+            <section>
+                <pre><code data-trim>GET /_cluster/health?level=indices</code></pre>
+                <pre><code data-trim>
+"indices": {
+    "conferences": {
+      "status": "yellow",
+      "number_of_shards": 5,
+      "number_of_replicas": 1,
+      "active_primary_shards": 5,
+      "active_shards": 5,
+      "relocating_shards": 0,
+      "initializing_shards": 0,
+      "unassigned_shards": 5
+    }
+}
+                </code></pre>
+                <p class="fragment" data-code-focus="3"/>
+                <p class="fragment" data-code-focus="5"/>
+                <p class="fragment" data-code-focus="10"/>
+            </section>
+            <section>
+                <pre><code data-trim>GET /_nodes/stats?human</code></pre>
+                <ul>
+                    <li class="fragment">indices - field_data, filter_cache</li>
+                    <li class="fragment">os - cpu, memory, load</li>
+                    <li class="fragment">process - file descriptors, cpu, memory</li>
+                    <li class="fragment">jvm - memory, garbage collection</li>
+                    <li class="fragment">thread_pool - threads, rejected</li>
+                    <li class="fragment">fs - disk space</li>
+                </ul>
+                <aside class="notes">
+                    Stats can also be requested for the complete cluster or only for a specific index.
+                </aside>
+            </section>
+            <section>
+                <pre><code data-trim>GET /_cluster/pending_tasks</code></pre>
+                <p>Should return an empty array, but ...</p>
+            </section>
+            <section>
+                <h3>_cat api</h3>
+                <pre class="fragment"><code data-trim>GET /_cat/health?v</code></pre>
+                <pre class="fragment"><code data-trim>GET /_cat/indices?v</code></pre>
+                <pre class="fragment"><code data-trim>GET /_cat/fielddata?v</code></pre>
             </section>
             <section>
                 <p>Using tools like Marvel</p>
             </section>
+        </section>
+        <section>
+            <h2>Logging</h2>
             <section>
-                <p>What to look out for?</p>
-                <ul>
-                    <li>Garbage collection</li>
-                    <li>Thread pools</li>
-                </ul>
+                <p>Can be changed dynamically</p>
+                <pre><code data-trim>
+PUT /_cluster/settings
+{
+    "transient" : {
+        "logger.discovery" : "DEBUG"
+    }
+}                </code></pre>
+            </section>
+            <section>
+                <h3>Slowlog</h3>
+                <pre><code data-trim>
+PUT /meetups/_settings
+{
+    "index.search.slowlog.threshold.query.warn" : "10s",
+    "index.search.slowlog.threshold.fetch.debug": "500ms",
+    "index.indexing.slowlog.threshold.index.info": "5s"
+}
+                </code></pre>
+                <pre><code data-trim>
+PUT /_cluster/settings
+{
+    "transient" : {
+        "logger.index.search.slowlog" : "DEBUG",
+        "logger.index.indexing.slowlog" : "WARN"
+    }
+}                </code></pre>
             </section>
         </section>
     </div>
