@@ -458,11 +458,6 @@ PUT /conferences
         <section>
             <h3>Tips</h3>
             <section>
-                <h3>Use Bulk</h3>
-                <p>Bulk request should be between 5-15Mb max</p>
-                <p>Round robin requests over nodes</p>
-            </section>
-            <section>
                 <h3>Disable or decrease refresh rate</h3>
                 <pre><code class="hljs" data-trim>
 curl -XGET 'http://localhost:9200/meetups/_settings' -d '{
@@ -479,6 +474,11 @@ curl -XGET 'http://localhost:9200/meetups/_settings' -d '{
         "number_of_replicas" : 0
     } }'
                 </code></pre>
+            </section>
+            <section>
+                <h3>Use Bulk</h3>
+                <p>Bulk request should be between 5-15Mb max</p>
+                <p>Round robin requests over nodes</p>
             </section>
             <aside class="notes">
                 <p>Choose the correct bulk size, usually each bulk should be between 5-15Mb</p>
